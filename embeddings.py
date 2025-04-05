@@ -3,7 +3,10 @@ from sentence_transformers import SentenceTransformer
 from datasets import load_dataset
 import numpy as np
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
 model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+model = model.to(device)
 msmarco_train = load_dataset("ms_marco", "v2.1", split="train")
 os.makedirs("embeddings", exist_ok=True)
 
