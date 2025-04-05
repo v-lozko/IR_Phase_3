@@ -37,7 +37,7 @@ if __name__ == "__main__":
         "format_file": "npy",
         "dataset_docs": "embeddings/passages_embeddings.npy",
         "dataset_queries": "embeddings/queries_embeddings.npy",
-        "dataset_neighbors": "embeddings/top10_neighbors.npy",
+        "neighbors": "embeddings/top10_neighbors.npy",
         "algorithm": "kmeans-spherical",
         "nclusters": 2966,  # Square root of dataset size
         "top_k": 10,
