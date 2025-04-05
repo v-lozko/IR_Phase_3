@@ -1,4 +1,5 @@
 import os
+import torch
 from sentence_transformers import SentenceTransformer
 from datasets import load_dataset
 import numpy as np
@@ -12,21 +13,21 @@ msmarco_train = load_dataset("ms_marco", "v2.1", split="train")
 os.makedirs("embeddings", exist_ok=True)
 
 def compute_topk_neighbors(query_embeds, doc_embeds, top_k=10, batch_size=256):
+    doc_tensor = torch.tensor(doc_embeds, dtype=torch.float32, device=device).T  # transpose for matmul
+
     num_queries = query_embeds.shape[0]
     neighbors = np.zeros((num_queries, top_k), dtype=np.int32)
 
-    for i in tqdm(range(0, num_queries, batch_size), desc="Computing top-k neighbors"):
-        # Get a batch of queries
-        q_batch = query_embeds[i:i + batch_size]  # (batch_size, dim)
+    for i in tqdm(range(0, num_queries, batch_size), desc="Computing top-k neighbors (torch)"):
+        q_batch = torch.tensor(query_embeds[i:i + batch_size], dtype=torch.float32, device=device)  # (B, D)
 
-        # Compute dot products with all document embeddings
-        scores = q_batch @ doc_embeds.T  # (batch_size, num_docs)
+        # Dot product: (B, D) @ (D, N) → (B, N)
+        scores = q_batch @ doc_tensor
 
-        # Get top-k indices for each query
-        topk = np.argsort(-scores, axis=1)[:, :top_k]  # (batch_size, top_k)
+        # Get top-k indices
+        topk = torch.topk(scores, k=top_k, dim=1).indices  # shape: (batch_size, top_k)
 
-        # Save to the correct slice in the result
-        neighbors[i:i + batch_size] = topk
+        neighbors[i:i + batch_size] = topk.cpu().numpy()
 
     return neighbors
 
@@ -37,10 +38,10 @@ all_passages = []
 for example in msmarco_train:
     queries.append(example["query"])
 
-    for i, selected in enumerate(example["passages"]["is_selected"]):
-        if selected == 1:
-            text = example["passages"]["passage_text"][i]
-            all_passages.append(text)
+    passage_texts = example["passages"]["passage_text"]
+
+    for text in passage_texts:
+        all_passages.append(text)
 
 print("embedding passages")
 passage_embeddings = model.encode(all_passages, batch_size=128, show_progress_bar=True)
