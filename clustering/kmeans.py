@@ -37,10 +37,12 @@ def k_means(doc_vectors, n_clusters, flag_spherical=True):
     clustering = faiss.Kmeans(doc_vectors.shape[1],
                               n_clusters,
                               spherical=flag_spherical,
-                              gpu=True)
+                              gpu=False)
 
     samples = np.random.choice(doc_vectors.shape[0], min(39 * n_clusters, doc_vectors.shape[0]), replace=False)
     clustering.train(doc_vectors[samples])
+
+    
     print(f"[INFO] Searching cluster labels for all {doc_vectors.shape[0]} documents...")
     _, label_clustering = clustering.index.search(doc_vectors, 1)
 
