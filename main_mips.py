@@ -259,6 +259,8 @@ def main(_):
 
     # load centroids and labels
     else:
+        print("DEBUG:", FLAGS.name_dataset, FLAGS.name_embedding, FLAGS.algorithm)
+
         centroids_file = FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' + FLAGS.algorithm + '_centroids.npy'
         label_clustering_file = FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' + FLAGS.algorithm + '_label_clustering.npy'
 

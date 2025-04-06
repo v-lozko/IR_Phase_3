@@ -42,8 +42,7 @@ def k_means(doc_vectors, n_clusters, flag_spherical=True):
     samples = np.random.choice(doc_vectors.shape[0], min(39 * n_clusters, doc_vectors.shape[0]), replace=False)
     clustering.train(doc_vectors[samples])
 
-    
     print(f"[INFO] Searching cluster labels for all {doc_vectors.shape[0]} documents...")
     _, label_clustering = clustering.index.search(doc_vectors, 1)
-
+    print("label_clustering shape:", label_clustering.shape)
     return clustering.centroids, label_clustering

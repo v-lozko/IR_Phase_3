@@ -1,6 +1,6 @@
 import subprocess
 
-def run_ann_search(name_dataset, name_embedding, format_file, dataset_docs,dataset_queries, neighbors, algorithm,
+def run_ann_search(name_dataset, name_embedding, format_file, dataset_docs,dataset_queries, dataset_neighbors, algorithm,
                    nclusters, top_k, ells, test_split_percent, split_seed,
                    learner_nunits, learner_nepochs, compute_clusters):
     command = [
@@ -10,7 +10,7 @@ def run_ann_search(name_dataset, name_embedding, format_file, dataset_docs,datas
         "--format_file", format_file,
         "--dataset_docs", dataset_docs,
         "--dataset_queries", dataset_queries,
-        "--dataset_neighbors", neighbors,
+        "--dataset_neighbors", dataset_neighbors,
         "--algorithm", algorithm,
         "--nclusters", str(nclusters),
         "--top_k", str(top_k),
@@ -37,7 +37,7 @@ if __name__ == "__main__":
         "format_file": "npy",
         "dataset_docs": "embeddings/passages_embeddings.npy",
         "dataset_queries": "embeddings/queries_embeddings.npy",
-        "neighbors": "embeddings/top10_neighbors.npy",
+        "dataset_neighbors": "embeddings/top10_neighbors.npy",
         "algorithm": "kmeans-spherical",
         "nclusters": 2966,  # Square root of dataset size
         "top_k": 10,
