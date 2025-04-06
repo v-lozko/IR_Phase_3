@@ -35,8 +35,8 @@ if __name__ == "__main__":
         "name_dataset": "MS_Marco",
         "name_embedding": "All-Mini",
         "format_file": "npy",
-        "dataset_docs": "embeddings/top1_passages_embeddings.npy",
-        "dataset_queries": "embeddings/top1_queries_embeddings.npy",
+        "dataset_docs": "embeddings/top1_passage_embeddings.npy",
+        "dataset_queries": "embeddings/top1_query_embeddings.npy",
         "dataset_neighbors": "embeddings/top1_neighbors.npy",
         "algorithm": "kmeans-spherical",
         "nclusters": 2966,  # Square root of dataset size
