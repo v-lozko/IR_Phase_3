@@ -325,8 +325,8 @@ def main(_):
 
         for j, doc_idx in enumerate(neighbors):
             cluster_id = top_clusters[j]
-            new_centroids = new_centroids[cluster_id]
-            documents[doc_idx[0]] = alpha * documents[doc_idx[0]] + (1 - alpha) * new_centroids
+            centroid = new_centroids[cluster_id]
+            documents[doc_idx[0]] = alpha * documents[doc_idx[0]] + (1 - alpha) * centroid
 
         if epoch != FLAGS.clustering_nepochs - 1:
             if FLAGS.algorithm in [AlgorithmKMeans, AlgorithmSphericalKmeans]:
