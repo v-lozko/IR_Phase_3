@@ -123,6 +123,9 @@ def get_final_results(name_method, centroids, x_test, y_test, top_k, clusters_to
     :param clusters_top_k_test: The clusters where the top documents for each query are located.
     :param gpu_flag: Flag that indicates whether to run the code using the GPU (True) or not (False).
     """
+    import os
+    os.makedirs('./ells_stat_sig', exist_ok=True)
+    os.makedirs('./results', exist_ok=True)
 
     # compute the score for each query and centroid
     print(name_method, end=' ')
