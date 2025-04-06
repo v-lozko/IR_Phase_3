@@ -32,21 +32,21 @@ def run_ann_search(name_dataset, name_embedding, format_file, dataset_docs,datas
 if __name__ == "__main__":
     # Define the parameters
     params = {
-        "name_dataset": "Flickr30k",
-        "name_embedding": "clip_vit",
+        "name_dataset": "MS_Marco",
+        "name_embedding": "All-Mini",
         "format_file": "npy",
-        "dataset_docs": "embeddings/passages_embeddings.npy",
-        "dataset_queries": "embeddings/queries_embeddings.npy",
-        "dataset_neighbors": "embeddings/top10_neighbors.npy",
+        "dataset_docs": "embeddings/top1_passages_embeddings.npy",
+        "dataset_queries": "embeddings/top1_queries_embeddings.npy",
+        "dataset_neighbors": "embeddings/top1_neighbors.npy",
         "algorithm": "kmeans-spherical",
         "nclusters": 2966,  # Square root of dataset size
-        "top_k": 10,
+        "top_k": 1,
         "ells": 30,  # Fraction of clusters examined
         "test_split_percent": 20,
         "split_seed": 42,
         "learner_nunits": 0,
         "learner_nepochs": 100,
-        "compute_clusters": 0  # Compute clusters (set to 0 to reuse clusters)
+        "compute_clusters": 1  # Compute clusters (set to 0 to reuse clusters)
     }
 
     # Run the ANN search
