@@ -95,7 +95,7 @@ flags.DEFINE_enum('algorithm', AlgorithmKMeans,
                    AlgorithmSphericalKmeans,
                    AlgorithmLinearLearner],
                   'Indexing algorithm.')
-
+flags.DEFINE_integer('clustering_nepochs', 3, 'Number of epochs for reclustering for query aware clustering' )
 flags.DEFINE_integer('nclusters', 1000, 'When `algorithm` is KMeans-based: Number of clusters.')
 
 # multi-probing, set the probes
@@ -132,7 +132,7 @@ def get_final_results(name_method, centroids, x_test, y_test, top_k, clusters_to
 
     # save scores computed
     print('Saving results: score for each query and centroid.')
-    np.save('./ells_stat_sig/' + name_method + '_' + FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' +
+    np.save('./ells_stat_sig/' + 'Query_' + name_method + '_' + FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' +
             FLAGS.algorithm + '_ells_stat_sig.npy', pred)
 
     # computation of the final scores
@@ -157,12 +157,11 @@ def get_final_results(name_method, centroids, x_test, y_test, top_k, clusters_to
     print(tabulate(table, headers='firstrow', tablefmt='psql'))
 
     # save the results
-    file_result = open('./results/' + name_method + '_' + FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' +
+    file_result = open('./results/' + 'Query_' + name_method + '_' + FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' +
                        FLAGS.algorithm + str(top_k) + '_results.txt', 'w')
     file_result.write(tabulate(table, headers='firstrow', tablefmt='psql'))
     file_result.close()
     print('Results saved.')
-
 
 def main(_):
     """
@@ -250,8 +249,8 @@ def main(_):
             print(f'Obtained centroids with shape: {centroids.shape}')
 
         # save centroids and label_clustering
-        centroids_file = FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' + FLAGS.algorithm + '_centroids.npy'
-        label_clustering_file = FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' + FLAGS.algorithm + '_label_clustering.npy'
+        centroids_file = 'Query_' + FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' + FLAGS.algorithm + '_centroids.npy'
+        label_clustering_file = 'Query_' + FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' + FLAGS.algorithm + '_label_clustering.npy'
 
         print('Saving clusters got.')
         np.save(centroids_file, centroids)
@@ -304,16 +303,45 @@ def main(_):
         x_test = partitioning[4]
         y_test = partitioning[5]
 
-    np.save(FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' + FLAGS.algorithm + '_y_test.npy', y_test)
+    np.save('Query_' + FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' + FLAGS.algorithm + '_y_test.npy', y_test)
 
-    # training linear-learner
-    print('Linear Learner.')
-    new_centroids = linearlearner.run_linear_learner(x_train=x_train, y_train=y_train,
-                                                     x_val=x_val, y_val=y_val,
-                                                     train_queries=queries,
-                                                     n_clusters=FLAGS.nclusters,
-                                                     n_epochs=FLAGS.learner_nepochs,
-                                                     n_units=FLAGS.learner_nunits)
+    for epoch in range(FLAGS.clustering_nepochs):
+        # training linear-learner
+        print('Linear Learner.')
+        new_centroids = linearlearner.run_linear_learner(x_train=x_train, y_train=y_train,
+                                                         x_val=x_val, y_val=y_val,
+                                                         train_queries=queries,
+                                                         n_clusters=FLAGS.nclusters,
+                                                         n_epochs=FLAGS.learner_nepochs,
+                                                         n_units=FLAGS.learner_nunits)
+
+        #query aware cluster updates
+        router = linearlearner.nn_linear(k=FLAGS.nclusters, input_shape=(queries.shape[1],), n_units=0)
+        router.set_weights([new_centroids.T])
+
+        cluster_logits = router.predict(queries, batch_size=512)
+        top_clusters = np.argmax(cluster_logits, axis=1)
+        alpha = 0.95
+
+        for j, doc_idx in enumerate(neighbors):
+            cluster_id = top_clusters[j]
+            new_centroids = new_centroids[cluster_id]
+            documents[doc_idx[0]] = alpha * documents[doc_idx[0]] + (1 - alpha) * new_centroids
+
+        if epoch != FLAGS.clustering_nepochs - 1:
+            if FLAGS.algorithm in [AlgorithmKMeans, AlgorithmSphericalKmeans]:
+                spherical = FLAGS.algorithm == AlgorithmSphericalKmeans
+                _, label_clustering = kmeans.k_means(doc_vectors=documents,
+                                                             n_clusters=FLAGS.nclusters,
+                                                             flag_spherical=spherical)
+
+            # shallow kmeans algorithm
+            elif FLAGS.algorithm == AlgorithmRandom:
+                _, label_clustering = k_random.random_clustering(doc_vectors=documents,
+                                                                         n_clusters=FLAGS.nclusters)
+
+            y_train = auxiliary.query_true_label(FLAGS.nclusters, label_clustering, partitioning[1][:, 0])
+            y_val = auxiliary.query_true_label(FLAGS.nclusters, label_clustering, partitioning[3][:, 0])
 
     print(f'Obtained centroids with shape: {new_centroids.shape}')
 
