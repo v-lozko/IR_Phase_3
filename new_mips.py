@@ -95,7 +95,7 @@ flags.DEFINE_enum('algorithm', AlgorithmKMeans,
                    AlgorithmSphericalKmeans,
                    AlgorithmLinearLearner],
                   'Indexing algorithm.')
-flags.DEFINE_integer('clustering_nepochs', 3, 'Number of epochs for reclustering for query aware clustering' )
+flags.DEFINE_integer('clustering_nepochs', 1, 'Number of epochs for reclustering for query aware clustering' )
 flags.DEFINE_integer('nclusters', 1000, 'When `algorithm` is KMeans-based: Number of clusters.')
 
 # multi-probing, set the probes
@@ -316,15 +316,17 @@ def main(_):
                                                          n_units=FLAGS.learner_nunits)
 
         #query aware cluster updates
+        train_doc_ids = partitioning[1][:, 0]
+        train_queries = partitioning[0]
+
         router = linearlearner.nn_linear(k=FLAGS.nclusters, input_shape=(queries.shape[1],), n_units=0)
         router.set_weights([new_centroids.T])
 
-        cluster_logits = router.predict(queries, batch_size=512)
-        top_clusters = np.argmax(cluster_logits, axis=1)
+        top_clusters_train = np.argmax(router.predict(train_queries, batch_size=512), axis=1)
         alpha = 0.95
 
-        for j, doc_idx in enumerate(neighbors):
-            cluster_id = top_clusters[j]
+        for j, doc_idx in enumerate(train_doc_ids):
+            cluster_id = top_clusters_train[j]
             centroid = new_centroids[cluster_id]
             documents[doc_idx[0]] = alpha * documents[doc_idx[0]] + (1 - alpha) * centroid
 
