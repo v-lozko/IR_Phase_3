@@ -328,7 +328,7 @@ def main(_):
         for j, doc_idx in enumerate(train_doc_ids):
             cluster_id = top_clusters_train[j]
             centroid = new_centroids[cluster_id]
-            documents[doc_idx[0]] = alpha * documents[doc_idx[0]] + (1 - alpha) * centroid
+            documents[doc_idx] = alpha * documents[doc_idx] + (1 - alpha) * centroid
 
         if epoch != FLAGS.clustering_nepochs - 1:
             if FLAGS.algorithm in [AlgorithmKMeans, AlgorithmSphericalKmeans]:
