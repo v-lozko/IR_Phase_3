@@ -10,6 +10,7 @@ import torch
 from torch import nn
 from torch.utils.data import TensorDataset, DataLoader
 from absl import flags
+import torch.nn.functional as F
 
 FLAGS = flags.FLAGS
 
@@ -119,75 +120,76 @@ def run_linear_learner(x_train, y_train, x_val, y_val, train_queries, n_clusters
 
 
 
-def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
-                          n_clusters, n_epochs, lr=1e-3, batch_size=256):
+def run_euclidean_learner_softmax(x_train, y_train, x_val, y_val, centroids,
+                                  n_epochs, lr=1e-3, batch_size=256):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # Convert input numpy arrays to PyTorch tensors
+    # Prepare tensors
     x_train = torch.tensor(x_train, dtype=torch.float32).to(device)
-    if not isinstance(y_train, torch.Tensor):
-        y_train = torch.tensor(y_train, dtype=torch.long, device=device)
-    else:
-        y_train = y_train.to(dtype=torch.long, device=device)
+    y_train = torch.tensor(y_train, dtype=torch.long, device=device)
     x_val = torch.tensor(x_val, dtype=torch.float32).to(device)
-    if not isinstance(y_val, torch.Tensor):
-        y_val = torch.tensor(y_val, dtype=torch.long, device=device)
-    else:
-        y_val = y_val.to(dtype=torch.long, device=device)
-
-
+    y_val = torch.tensor(y_val, dtype=torch.long, device=device)
     centroids = torch.tensor(centroids, dtype=torch.float32).to(device)
 
-    print("y_train dtype:", y_train.dtype, "shape:", y_train.shape)
-    print("centroids shape:", centroids.shape)
-    print("y_train min:", y_train.min().item(), "max:", y_train.max().item())
+    train_loader = DataLoader(TensorDataset(x_train, y_train), batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(TensorDataset(x_val, y_val), batch_size=batch_size)
 
-    # Create regression targets from centroid labels
-    target_train = centroids[y_train]  # shape: [N, D]
-    target_val = centroids[y_val]
-
-    # Create dataloaders
-    train_loader = DataLoader(TensorDataset(x_train, target_train), batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(TensorDataset(x_val, target_val), batch_size=batch_size)
-
-    # Linear model without bias
+    # Learner model: project queries into same space as centroids
     model = nn.Linear(x_train.shape[1], centroids.shape[1], bias=False).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    criterion = nn.MSELoss()
 
     best_model_state = None
     best_val_loss = float("inf")
-    with torch.no_grad():
-        baseline_loss = criterion(x_train, centroids[y_train])
-        print("Baseline (untrained) loss:", baseline_loss.item())
 
     for epoch in range(n_epochs):
         model.train()
         for xb, yb in train_loader:
             optimizer.zero_grad()
-            preds = model(xb)
-            loss = criterion(preds, yb)
+            query_proj = model(xb)  # shape: [B, 384]
+
+            # Compute distances to all centroids
+            q_norm = query_proj.pow(2).sum(dim=1, keepdim=True)  # [B, 1]
+            c_norm = centroids.pow(2).sum(dim=1).unsqueeze(0)    # [1, K]
+            dot = query_proj @ centroids.T                       # [B, K]
+            dists = q_norm + c_norm - 2 * dot                    # [B, K]
+
+            logits = -dists  # negative distances → similarity
+            loss = F.cross_entropy(logits, yb)
             loss.backward()
             optimizer.step()
 
-        # Evaluate on validation set
+        # Validation
         model.eval()
+        val_loss = 0
+        correct = 0
+        total = 0
         with torch.no_grad():
-            val_loss = 0
             for xb, yb in val_loader:
-                preds = model(xb)
-                val_loss += criterion(preds, yb).item()
-            val_loss /= len(val_loader)
+                query_proj = model(xb)
+                q_norm = query_proj.pow(2).sum(dim=1, keepdim=True)
+                c_norm = centroids.pow(2).sum(dim=1).unsqueeze(0)
+                dot = query_proj @ centroids.T
+                dists = q_norm + c_norm - 2 * dot
+                logits = -dists
+                val_loss += F.cross_entropy(logits, yb).item()
+
+                preds = logits.argmax(dim=1)
+                correct += (preds == yb).sum().item()
+                total += yb.size(0)
+
+        val_loss /= len(val_loader)
+        acc = correct / total
+        print(f"Epoch {epoch+1}: val_loss={val_loss:.5f}, val_acc={acc:.4f}")
 
         if val_loss < best_val_loss:
             best_val_loss = val_loss
             best_model_state = model.state_dict()
 
-        print(f"Epoch {epoch+1}: val_loss={val_loss:.5f}")
-
-    # Load best model state
     model.load_state_dict(best_model_state)
 
-    # Use the learned projection to produce new centroids (cluster representatives)
-    projected_centroids = model(centroids).detach().cpu().numpy()
+    # Project centroids for downstream retrieval (optional)
+    with torch.no_grad():
+        projected_centroids = model(centroids).cpu().numpy()
+
     return projected_centroids
+
