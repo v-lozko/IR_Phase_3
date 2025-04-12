@@ -170,7 +170,12 @@ def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
                 c_norm = centroids.pow(2).sum(dim=1).unsqueeze(0)
                 dot = query_proj @ centroids.T
                 dists = q_norm + c_norm - 2 * dot
-                logits = -dists
+                for i in range(xb.size(0)):
+                    rank = torch.argsort(dists[i]).tolist().index(yb[i].item())
+                    print(f"[DEBUG] Query {i}: true cluster rank = {rank}")
+
+                temperature = 0.1
+                logits = -dists / temperature
                 val_loss += F.cross_entropy(logits, yb).item()
 
                 preds = logits.argmax(dim=1)
