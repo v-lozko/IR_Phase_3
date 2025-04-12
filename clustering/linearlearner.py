@@ -181,8 +181,7 @@ def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
                     rank = torch.argsort(dists[i]).tolist().index(yb[i].item())
                     ranks.append(rank)
 
-                temperature = 0.75
-                logits = -dists / temperature
+                logits = -dists
                 val_loss += F.cross_entropy(logits, yb).item()
 
                 preds = logits.argmax(dim=1)

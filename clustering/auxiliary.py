@@ -26,7 +26,7 @@ def scores_queries_centroids(centroids, x_test, gpu_flag=True, model = None):
             x_tensor = torch.tensor(x_test, dtype=torch.float32)
             if gpu_flag:
                 x_tensor = x_tensor.cuda()
-            x_proj = model(x_tensor).cpu()
+            x_proj = F.normalize(model(x_tensor), p=2, dim=1).cpu()
             x_test = x_proj.numpy()
 
     if gpu_flag:
@@ -43,8 +43,8 @@ def scores_queries_centroids(centroids, x_test, gpu_flag=True, model = None):
         elif distance_metric == 'euclidean':
             q_norms = torch.sum(x_test**2, dim=1, keepdim=True)  # [N, 1]
             c_norms = torch.sum(centroids**2, dim=1, keepdim=True).T  # [1, K]
-            dot = torch.matmul(x_test, centroids.T)
-            results = q_norms + c_norms - 2 * dot  # distance
+            dot = torch.matmul(x_test, centroids.T)  # [N, K]
+            results = q_norms + c_norms - 2 * dot  # no normalization
 
         return results.cpu().numpy()
 
