@@ -112,11 +112,9 @@ def computation_top_k_clusters(top_k, n_cluster, scores):
     :return: The top-k clusters for each query.
     """
 
-    distance_metric = FLAGS.distance_metric
-
     # auxiliary function to compute computation_top_k_clusters
-    def centroids_query(scores_vec, distance_metric, top_k=top_k):
-        if distance_metric in ['cosine','dot']:
+    def centroids_query(scores_vec, top_k=top_k):
+        if FLAGS.distance_metric in ['cosine','dot']:
             max_top_k_ind = np.argpartition(scores_vec, -top_k)[-top_k:]
         else:
             max_top_k_ind = np.argpartition(scores_vec, top_k)[:top_k]
@@ -124,7 +122,7 @@ def computation_top_k_clusters(top_k, n_cluster, scores):
         res_vec[max_top_k_ind] = 1.
         return res_vec
 
-    return np.apply_along_axis(centroids_query, axis=1, arr=scores, args = (distance_metric, top_k))
+    return np.apply_along_axis(centroids_query, axis=1, arr=scores)
 
 
 def evaluate_ell_top_one(x_test, y_test):
