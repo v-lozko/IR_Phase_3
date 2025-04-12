@@ -127,6 +127,7 @@ def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
     else:
         y_val = y_val.to(dtype=torch.long, device=device)
 
+
     centroids = torch.tensor(centroids, dtype=torch.float32).to(device)
 
     print("y_train dtype:", y_train.dtype, "shape:", y_train.shape)
@@ -148,6 +149,9 @@ def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
 
     best_model_state = None
     best_val_loss = float("inf")
+    with torch.no_grad():
+        baseline_loss = criterion(x_train, centroids[y_train])
+        print("Baseline (untrained) loss:", baseline_loss.item())
 
     for epoch in range(n_epochs):
         model.train()
@@ -177,5 +181,5 @@ def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
     model.load_state_dict(best_model_state)
 
     # Use the learned projection to produce new centroids (cluster representatives)
-    projected_centroids = model(torch.eye(n_clusters, device=device)).detach().cpu().numpy()
+    projected_centroids = model(centroids).detach().cpu().numpy()
     return projected_centroids
