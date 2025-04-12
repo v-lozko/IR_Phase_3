@@ -26,20 +26,20 @@ def nn_linear(k, input_shape, n_units):
     :return: The neural network model.
     """
     # w/out hidden layer
-    if FLAGS.distance_metric == 'euclidean':
+    # if FLAGS.distance_metric == 'euclidean':
+    #     model = models.Sequential()
+    #     model.add(layers.Dense(128, activation='relu', use_bias=True, input_shape=input_shape))
+    #     model.add(layers.Dense(k, activation='softmax', use_bias=True))
+    # else:
+    if n_units == 0:
         model = models.Sequential()
-        model.add(layers.Dense(128, activation='relu', use_bias=True, input_shape=input_shape))
-        model.add(layers.Dense(k, activation='softmax', use_bias=True))
-    else:
-        if n_units == 0:
-            model = models.Sequential()
-            model.add(layers.Dense(k, activation='softmax', use_bias=False, input_shape=input_shape))
+        model.add(layers.Dense(k, activation='softmax', use_bias=False, input_shape=input_shape))
 
-        # w/ hidden layer
-        else:
-            model = models.Sequential()
-            model.add(layers.Dense(n_units, activation=None, use_bias=False, input_shape=input_shape))
-            model.add(layers.Dense(k, activation='softmax', use_bias=False))
+    # w/ hidden layer
+    else:
+        model = models.Sequential()
+        model.add(layers.Dense(n_units, activation=None, use_bias=False, input_shape=input_shape))
+        model.add(layers.Dense(k, activation='softmax', use_bias=False))
 
     return model
 

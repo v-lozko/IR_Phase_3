@@ -84,8 +84,8 @@ if __name__ == "__main__":
         "ells": 30,  # Fraction of clusters examined
         "test_split_percent": 20,
         "split_seed": 42,
-        "learner_nunits": 1,
-        "learner_nepochs": 2,
+        "learner_nunits": 0,
+        "learner_nepochs": 20,
         "compute_clusters": 0  # Compute clusters (set to 0 to reuse clusters)
     }
 
