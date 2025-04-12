@@ -1,55 +1,55 @@
 """
-    *project*:
-     mips-learnt-ivf
+updated auxiliary file from original, specifically scores_queries_centroids to
+accommodate Euclidean and cosine distance metrics
 
-    *authors*:
-     Thomas Vecchiato, Claudio Lucchese, Franco Maria Nardini, Sebastian Bruch
-
-    *name file*:
-     auxiliary.py
-
-    *version file*:
-     1.0
-
-    *description*:
-     Auxiliary functions for our project, necessary to obtain the final results.
 """
 
 import numpy as np
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 import torch
+from absl import flags
+FLAGS = flags.FLAGS
 
 
 def scores_queries_centroids(centroids, x_test, gpu_flag=True):
     """
-    Compute for each query the distribution of the centroids according the dot-product calculation (<.,.>),
-    that can be performed w/ or w/out the GPU.
-
-    :param centroids: The centroids.
-    :param x_test: The embedding queries.
-    :param gpu_flag: Flag that indicates whether to run the code using the GPU (True) or not (False).
-    :return: The dot-product between each query and each centroid.
+    Compute for each query the distance/similarity to centroids, depending on the selected metric.
     """
+    distance_metric = FLAGS.distance_metric
 
-    # gpu computation
     if gpu_flag:
-        dim_iter = x_test.shape[0]
-
         torch.cuda.set_device(0)
         centroids = torch.from_numpy(centroids).cuda(0)
         x_test = torch.from_numpy(x_test).cuda(0)
 
-        results = []
-        for i in tqdm(range(dim_iter), leave=False, colour='cyan'):
-            results.append(torch.mv(centroids, x_test[i]).to('cpu').numpy())
-        return np.array(results)
-    # cpu computation
+        if distance_metric == 'cosine':
+            centroids = F.normalize(centroids, p=2, dim=1)
+            x_test = F.normalize(x_test, p=2, dim=1)
+
+        if distance_metric in ['dot', 'cosine']:
+            results = torch.matmul(x_test, centroids.T)  # similarity
+        elif distance_metric == 'euclidean':
+            q_norms = torch.sum(x_test**2, dim=1, keepdim=True)  # [N, 1]
+            c_norms = torch.sum(centroids**2, dim=1, keepdim=True).T  # [1, K]
+            dot = torch.matmul(x_test, centroids.T)
+            results = q_norms + c_norms - 2 * dot  # distance
+
+        return results.cpu().numpy()
+
     else:
         def score_computation(query, means=centroids):
-            return np.array([np.dot(query, center) for center in means])
+            if distance_metric == 'dot':
+                return np.dot(means, query)
+            elif distance_metric == 'cosine':
+                query = query / np.linalg.norm(query)
+                means = means / np.linalg.norm(means, axis=1, keepdims=True)
+                return np.dot(means, query)
+            elif distance_metric == 'euclidean':
+                return np.sum((means - query)**2, axis=1)
 
         return np.apply_along_axis(score_computation, axis=1, arr=x_test)
+
 
 
 def create_vector_distribution(k, pos):

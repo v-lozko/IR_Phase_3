@@ -1,7 +1,7 @@
 import subprocess
 
 def run_ann_search(name_dataset, name_embedding, format_file, dataset_docs,dataset_queries, dataset_neighbors, algorithm,
-                   nclusters, top_k, ells, test_split_percent, split_seed,
+                   nclusters, top_k, ells, test_split_percent, split_seed, distance_metric,
                    learner_nunits, learner_nepochs, compute_clusters):
     command = [
         "python", "main_mips.py",
@@ -12,6 +12,7 @@ def run_ann_search(name_dataset, name_embedding, format_file, dataset_docs,datas
         "--dataset_queries", dataset_queries,
         "--dataset_neighbors", dataset_neighbors,
         "--algorithm", algorithm,
+        "--distance_metric", distance_metric,
         "--nclusters", str(nclusters),
         "--top_k", str(top_k),
         "--ells", str(ells),
@@ -31,14 +32,15 @@ def run_ann_search(name_dataset, name_embedding, format_file, dataset_docs,datas
 
 if __name__ == "__main__":
     # Define the parameters
-    params = {
+    params_dot = {
         "name_dataset": "MS_Marco",
         "name_embedding": "All-Mini",
         "format_file": "npy",
         "dataset_docs": "embeddings/top1_passage_embeddings.npy",
         "dataset_queries": "embeddings/top1_query_embeddings.npy",
         "dataset_neighbors": "embeddings/top1_neighbors.npy",
-        "algorithm": "kmeans-spherical",
+        "algorithm": "kmeans",
+        "distance_metric": "dot",
         "nclusters": 2966,  # Square root of dataset size
         "top_k": 1,
         "ells": 30,  # Fraction of clusters examined
@@ -49,5 +51,45 @@ if __name__ == "__main__":
         "compute_clusters": 1  # Compute clusters (set to 0 to reuse clusters)
     }
 
+    params_cosine = {
+        "name_dataset": "MS_Marco",
+        "name_embedding": "All-Mini",
+        "format_file": "npy",
+        "dataset_docs": "embeddings/top1_passage_embeddings.npy",
+        "dataset_queries": "embeddings/top1_query_embeddings.npy",
+        "dataset_neighbors": "embeddings/top1_neighbors.npy",
+        "algorithm": "kmeans",
+        "distance_metric": "cosine",
+        "nclusters": 2966,  # Square root of dataset size
+        "top_k": 1,
+        "ells": 30,  # Fraction of clusters examined
+        "test_split_percent": 20,
+        "split_seed": 42,
+        "learner_nunits": 0,
+        "learner_nepochs": 100,
+        "compute_clusters": 0  # Compute clusters (set to 0 to reuse clusters)
+    }
+
+    params_euc = {
+        "name_dataset": "MS_Marco",
+        "name_embedding": "All-Mini",
+        "format_file": "npy",
+        "dataset_docs": "embeddings/top1_passage_embeddings.npy",
+        "dataset_queries": "embeddings/top1_query_embeddings.npy",
+        "dataset_neighbors": "embeddings/top1_neighbors.npy",
+        "algorithm": "kmeans",
+        "distance_metric": "euclidean",
+        "nclusters": 2966,  # Square root of dataset size
+        "top_k": 1,
+        "ells": 30,  # Fraction of clusters examined
+        "test_split_percent": 20,
+        "split_seed": 42,
+        "learner_nunits": 0,
+        "learner_nepochs": 100,
+        "compute_clusters": 0  # Compute clusters (set to 0 to reuse clusters)
+    }
+
     # Run the ANN search
-    run_ann_search(**params)
+    run_ann_search(**params_dot)
+    run_ann_search(**params_cosine)
+    run_ann_search(**params_euc)

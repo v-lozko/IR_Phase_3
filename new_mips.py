@@ -95,7 +95,7 @@ flags.DEFINE_enum('algorithm', AlgorithmKMeans,
                    AlgorithmSphericalKmeans,
                    AlgorithmLinearLearner],
                   'Indexing algorithm.')
-flags.DEFINE_integer('clustering_nepochs', 1, 'Number of epochs for reclustering for query aware clustering' )
+flags.DEFINE_integer('clustering_nepochs', 2, 'Number of epochs for reclustering for query aware clustering' )
 flags.DEFINE_integer('nclusters', 1000, 'When `algorithm` is KMeans-based: Number of clusters.')
 
 # multi-probing, set the probes

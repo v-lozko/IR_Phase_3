@@ -1,43 +1,7 @@
 """
-    **A Learning-to-Rank Formulation of Clustering-Based Approximate Nearest Neighbor Search**
 
-    *project*:
-     mips-learnt-ivf
-
-    *authors*:
-     Thomas Vecchiato, Claudio Lucchese, Franco Maria Nardini, Sebastian Bruch
-
-    *name file*:
-     main_mips.py
-
-    *version file*:
-     1.0
-
-    *description*:
-     A critical piece of the modern information retrieval puzzle is approximate nearest neighbor search.
-     Its objective is to return a set of k data points that are closest to a query point, with its accuracy measured by
-     the proportion of exact nearest neighbors captured in the returned set. One popular approach to this question
-     is clustering: The indexing algorithm partitions data points into non-overlapping subsets and represents each
-     partition by a point such as its centroid. The query processing algorithm first identifies the nearest
-     clusters — a process known as routing — then performs a nearest neighbor search over those clusters only.
-     In this work, we make a simple observation: The routing function solves a ranking problem.
-     Its quality can therefore be assessed with a ranking metric, making the function amenable to learning-to-rank.
-     Interestingly, ground-truth is often freely available: Given a query distribution in a top-k configuration,
-     the ground-truth is the set of clusters that contain the exact top-k vectors. We develop this insight and apply
-     it to Maximum Inner Product Search (MIPS). As we demonstrate empirically on various datasets,
-     learning a simple linear function consistently improves the accuracy of clustering-based MIPS.
-
-    *run commands*:
-
-     1. **hdf5 format**:
-     python main_mips.py --name_dataset ... --name_embedding ... --format_file hdf5 --dataset ... --algorithm ...
-     --nclusters ... --top_k ... --test_split_percent ... --split_seed ... --ells ... --learner_nunits ...
-     --learner_nepochs ... --compute_clusters ...
-
-     2. **npy format**:
-     python main_mips.py --name_dataset ... --name_embedding ... --format_file npy --dataset_docs ...
-     --dataset_queries ... --dataset_neighbors ... --algorithm ... --nclusters ... --top_k ... --test_split_percent ...
-     --split_seed ... --ells ... --learner_nunits ... --learner_nepochs ... --compute_clusters ...
+updated main_mips.py to accommodate for additional distance metrics. This includes
+cosine and Euclidean distances.
 
 """
 
@@ -98,6 +62,9 @@ flags.DEFINE_enum('algorithm', AlgorithmKMeans,
 
 flags.DEFINE_integer('nclusters', 1000, 'When `algorithm` is KMeans-based: Number of clusters.')
 
+#define distance metric
+flags.DEFINE_string('distance_metric', 'dot', ['dot', 'cosine', 'euclidean'], 'Distance metric between queries and centroids')
+
 # multi-probing, set the probes
 flags.DEFINE_list('ells', [1],
                   'Minimum number of documents to examine.')
@@ -136,7 +103,7 @@ def get_final_results(name_method, centroids, x_test, y_test, top_k, clusters_to
     # save scores computed
     print('Saving results: score for each query and centroid.')
     np.save('./ells_stat_sig/' + name_method + '_' + FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' +
-            FLAGS.algorithm + '_ells_stat_sig.npy', pred)
+            FLAGS.distance_metric + '_' + FLAGS.algorithm + '_ells_stat_sig.npy', pred)
 
     # computation of the final scores
     results_ells = []
@@ -161,7 +128,7 @@ def get_final_results(name_method, centroids, x_test, y_test, top_k, clusters_to
 
     # save the results
     file_result = open('./results/' + name_method + '_' + FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' +
-                       FLAGS.algorithm + str(top_k) + '_results.txt', 'w')
+                       FLAGS.distance_metric + '_' + FLAGS.algorithm + str(top_k) + '_results.txt', 'w')
     file_result.write(tabulate(table, headers='firstrow', tablefmt='psql'))
     file_result.close()
     print('Results saved.')
@@ -253,8 +220,10 @@ def main(_):
             print(f'Obtained centroids with shape: {centroids.shape}')
 
         # save centroids and label_clustering
-        centroids_file = FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' + FLAGS.algorithm + '_centroids.npy'
-        label_clustering_file = FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' + FLAGS.algorithm + '_label_clustering.npy'
+        centroids_file = (FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' + FLAGS.distance_metric +
+                          '_' + FLAGS.algorithm + '_centroids.npy')
+        label_clustering_file = (FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' + FLAGS.distance_metric +
+                                 '_' + FLAGS.algorithm + '_label_clustering.npy')
 
         print('Saving clusters got.')
         np.save(centroids_file, centroids)
@@ -264,8 +233,10 @@ def main(_):
     else:
         print("DEBUG:", FLAGS.name_dataset, FLAGS.name_embedding, FLAGS.algorithm)
 
-        centroids_file = FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' + FLAGS.algorithm + '_centroids.npy'
-        label_clustering_file = FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' + FLAGS.algorithm + '_label_clustering.npy'
+        centroids_file = (FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' + FLAGS.distance_metric +
+                          '_' + FLAGS.algorithm + '_centroids.npy')
+        label_clustering_file = (FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' + FLAGS.distance_metric +
+                                 '_' + FLAGS.algorithm + '_label_clustering.npy')
 
         centroids = np.load(centroids_file)
         label_clustering = np.load(label_clustering_file)
@@ -307,7 +278,8 @@ def main(_):
         x_test = partitioning[4]
         y_test = partitioning[5]
 
-    np.save(FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' + FLAGS.algorithm + '_y_test.npy', y_test)
+    np.save(FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' + FLAGS.distance_metric + '_'
+            + FLAGS.algorithm + '_y_test.npy', y_test)
 
     # training linear-learner
     print('Linear Learner.')
