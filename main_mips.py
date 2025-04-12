@@ -220,10 +220,8 @@ def main(_):
             print(f'Obtained centroids with shape: {centroids.shape}')
 
         # save centroids and label_clustering
-        centroids_file = (FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' + FLAGS.distance_metric +
-                          '_' + FLAGS.algorithm + '_centroids.npy')
-        label_clustering_file = (FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' + FLAGS.distance_metric +
-                                 '_' + FLAGS.algorithm + '_label_clustering.npy')
+        centroids_file = (FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' + FLAGS.algorithm + '_centroids.npy')
+        label_clustering_file = (FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' + FLAGS.algorithm + '_label_clustering.npy')
 
         print('Saving clusters got.')
         np.save(centroids_file, centroids)
@@ -233,10 +231,8 @@ def main(_):
     else:
         print("DEBUG:", FLAGS.name_dataset, FLAGS.name_embedding, FLAGS.algorithm)
 
-        centroids_file = (FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' + FLAGS.distance_metric +
-                          '_' + FLAGS.algorithm + '_centroids.npy')
-        label_clustering_file = (FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' + FLAGS.distance_metric +
-                                 '_' + FLAGS.algorithm + '_label_clustering.npy')
+        centroids_file = (FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' + FLAGS.algorithm + '_centroids.npy')
+        label_clustering_file = (FLAGS.name_dataset + '_' + FLAGS.name_embedding + '_' + FLAGS.algorithm + '_label_clustering.npy')
 
         centroids = np.load(centroids_file)
         label_clustering = np.load(label_clustering_file)
