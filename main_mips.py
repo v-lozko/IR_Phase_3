@@ -146,47 +146,7 @@ def main(_):
 
     # hdf5 format file
     if FLAGS.format_file == 'hdf5':
-        dataset = h5py.File(FLAGS.dataset, 'r')
-
-        documents = np.array(dataset[FLAGS.documents_key])
-
-        train_queries = None
-        train_ground_truth = None
-        valid_queries = None
-        valid_ground_truth = None
-        test_queries = None
-        test_ground_truth = None
-
-        # Prepare the dataset
-        if FLAGS.train_queries_key in dataset:
-            train_queries = dataset[FLAGS.train_queries_key]
-            train_ground_truth = dataset[FLAGS.train_neighbors_key]
-            train_ground_truth = train_ground_truth[:, :FLAGS.top_k]
-        if FLAGS.valid_queries_key in dataset:
-            valid_queries = dataset[FLAGS.valid_queries_key]
-            valid_ground_truth = dataset[FLAGS.valid_neighbors_key]
-            valid_ground_truth = valid_ground_truth[:, :FLAGS.top_k]
-        if FLAGS.test_queries_key in dataset:
-            test_queries = dataset[FLAGS.test_queries_key]
-            test_ground_truth = dataset[FLAGS.test_neighbors_key]
-            test_ground_truth = test_ground_truth[:, :FLAGS.top_k]
-
-        queries = []
-        neighbors = []
-        if FLAGS.train_queries_key in dataset:
-            queries.append(train_queries)
-            neighbors.append(train_ground_truth)
-        if FLAGS.valid_queries_key in dataset:
-            queries.append(valid_queries)
-            neighbors.append(valid_ground_truth)
-        if FLAGS.test_queries_key in dataset:
-            queries.append(test_queries)
-            neighbors.append(test_ground_truth)
-
-        neighbors = np.concatenate(neighbors, axis=0) if len(queries) > 1 else neighbors[0]
-        queries = np.concatenate(queries, axis=0) if len(queries) > 1 else queries[0]
-
-        assert len(queries) == len(neighbors)
+        raise NotImplementedError("HDF5 input format is not supported in this version. Please use --format_file=npy.")
 
     # npy format file
     elif FLAGS.format_file == 'npy':
@@ -248,25 +208,15 @@ def main(_):
     clusters_top_k_test = None
 
     if FLAGS.format_file == 'hdf5':
-        partitioning = auxiliary.train_test_val(queries, neighbors, size_split=FLAGS.test_split_percent/100)
-
-        x_train = partitioning[0]
-        y_train = auxiliary.query_true_label(FLAGS.nclusters, label_clustering, partitioning[1][:, 0])
-        x_val = partitioning[2]
-        y_val = auxiliary.query_true_label(FLAGS.nclusters, label_clustering, partitioning[3][:, 0])
-        x_test = partitioning[4]
-        y_test = auxiliary.query_true_label(FLAGS.nclusters, label_clustering,  partitioning[5][:, 0])
-
-        if FLAGS.top_k > 1:
-            clusters_top_k = []
-            for best_test_neigh in partitioning[5]:
-                clusters_top_k.append(label_clustering[best_test_neigh])
-            clusters_top_k_test = np.array(clusters_top_k)
+        raise NotImplementedError("HDF5 input format is not supported in this version. Please use --format_file=npy.")
 
     elif FLAGS.format_file == 'npy':
-        label_data = auxiliary.query_true_label(FLAGS.nclusters, label_clustering, neighbors)
-        partitioning = auxiliary.train_test_val(queries, label_data, size_split=FLAGS.test_split_percent/100)
-
+        if FLAGS.distance_metric in ['dot', 'cosine']:
+            label_data = auxiliary.query_true_label(FLAGS.nclusters, label_clustering, neighbors)
+            partitioning = auxiliary.train_test_val(queries, label_data, size_split=FLAGS.test_split_percent/100)
+        else:
+            label_data = auxiliary.query_true_label(FLAGS.nclusters, label_clustering, neighbors, one_hot=False)
+            partitioning = auxiliary.train_test_val(queries, label_data, size_split=FLAGS.test_split_percent / 100)
         x_train = partitioning[0]
         y_train = partitioning[1]
         x_val = partitioning[2]

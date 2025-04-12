@@ -68,21 +68,18 @@ def create_vector_distribution(k, pos):
     return vect
 
 
-def query_true_label(n_cluster, label_clustering, neighbors):
+def query_true_label(n_cluster, label_clustering, neighbors, one_hot=True):
     """
-    Create the ground truth for each query, where the cell with value 1 indicates in which cluster the best document
-    is located.
+    Create the ground truth for each query.
 
-    :param n_cluster: The number of clusters.
-    :param label_clustering: Vector where each position indicates the related document and the value inside the cell
-     is the cluster where the document is located.
-    :param neighbors: Vector where each position indicates the related query and the value inside the cell
-     is the best document.
-    :return: The ground truth.
+    If `one_hot` is True: return a one-hot vector with 1 at the cluster index.
+    If `one_hot` is False: return the integer index of the true cluster.
     """
-
-    return np.array([create_vector_distribution(n_cluster, label_clustering[i_doc].item())
-                     for i_doc in neighbors], dtype=np.int8)
+    if one_hot:
+        return np.array([create_vector_distribution(n_cluster, label_clustering[i_doc].item())
+                         for i_doc in neighbors], dtype=np.int8)
+    else:
+        return np.array([label_clustering[i_doc].item() for i_doc in neighbors], dtype=np.int32)
 
 
 def train_test_val(query_vectors, label_data, size_split=0.2):
