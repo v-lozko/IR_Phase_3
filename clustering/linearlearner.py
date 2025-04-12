@@ -188,8 +188,8 @@ def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
     model.load_state_dict(best_model_state)
 
     # Project centroids for downstream retrieval (optional)
-    with torch.no_grad():
-        projected_centroids = model(centroids).cpu().numpy()
+
+    projected_centroids = centroids.cpu().numpy()
 
     return projected_centroids
 
