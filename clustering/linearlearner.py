@@ -120,7 +120,7 @@ def run_linear_learner(x_train, y_train, x_val, y_val, train_queries, n_clusters
 
 
 
-def run_euclidean_learner_softmax(x_train, y_train, x_val, y_val, centroids,
+def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
                                   n_epochs, lr=1e-3, batch_size=256):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
