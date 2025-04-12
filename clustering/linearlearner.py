@@ -9,6 +9,7 @@ from tensorflow.keras.optimizers import Adam
 import torch
 from torch import nn
 from torch.utils.data import TensorDataset, DataLoader
+FLAGS = flags.FLAGS
 
 def nn_linear(k, input_shape, n_units):
     """
@@ -22,17 +23,22 @@ def nn_linear(k, input_shape, n_units):
     :return: The neural network model.
     """
     # w/out hidden layer
-    if n_units == 0:
+    if FLAGS.distance_metric == 'euclidean':
         model = models.Sequential()
-        model.add(layers.Dense(k, activation='softmax', use_bias=False, input_shape=input_shape))
-        return model
-
-    # w/ hidden layer
+        model.add(layers.Dense(128, activation='relu', use_bias=True, input_shape=input_shape))
+        model.add(layers.Dense(k, activation='softmax', use_bias=True))
     else:
-        model = models.Sequential()
-        model.add(layers.Dense(n_units, activation=None, use_bias=False, input_shape=input_shape))
-        model.add(layers.Dense(k, activation='softmax', use_bias=False))
-        return model
+        if n_units == 0:
+            model = models.Sequential()
+            model.add(layers.Dense(k, activation='softmax', use_bias=False, input_shape=input_shape))
+
+        # w/ hidden layer
+        else:
+            model = models.Sequential()
+            model.add(layers.Dense(n_units, activation=None, use_bias=False, input_shape=input_shape))
+            model.add(layers.Dense(k, activation='softmax', use_bias=False))
+
+    return model
 
 
 def run_nn(n_clusters, input_shape, x_train, y_train, x_val, y_val, n_epochs=50, n_units=0):
