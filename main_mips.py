@@ -118,9 +118,25 @@ def get_final_results(name_method, centroids, x_test, y_test, top_k, clusters_to
         for threshold in tqdm(FLAGS.ells):
             k = int(threshold)
             one_pred = auxiliary.computation_top_k_clusters(k, FLAGS.nclusters, pred)
-            print(f"[DEBUG] ell={k}, top_k={FLAGS.top_k}")
-            print("Predicted clusters:", np.where(one_pred[0] == 1)[0])
-            print("True cluster:", np.where(y_test[0] == 1)[0])
+
+            # DEBUG: Rank of the true cluster
+            query_idx = 0  # Pick a query to inspect
+            true_cluster = np.where(y_test[query_idx] == 1)[0][0]
+            scores_for_query = pred[query_idx]  # shape: [n_clusters]
+
+            if FLAGS.distance_metric == 'euclidean':
+                sorted_clusters = np.argsort(scores_for_query)  # lower = better
+            else:
+                sorted_clusters = np.argsort(-scores_for_query)  # higher = better
+
+            rank = np.where(sorted_clusters == true_cluster)[0][0]
+
+            print(f"[DEBUG] ell={k}, Query {query_idx}")
+            print(f"True cluster: {true_cluster}")
+            print(f"Predicted top-10: {sorted_clusters[:10]}")
+            print(f"True cluster rank: {rank}")
+            print("-----")
+
             res = auxiliary.evaluate_ell_top_one(one_pred, y_test)
             results_ells.append(res)
             print('k = {0}: {1}'.format(k, res))
