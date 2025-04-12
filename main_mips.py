@@ -79,7 +79,7 @@ flags.DEFINE_integer('compute_clusters', 0, '0 - perform clustering algorithm; '
 FLAGS = flags.FLAGS
 
 
-def get_final_results(name_method, centroids, x_test, y_test, top_k, clusters_top_k_test=None, gpu_flag=True):
+def get_final_results(name_method, centroids, x_test, y_test, top_k, clusters_top_k_test=None, gpu_flag=True, model = None):
     """
     Computes the final results, where we have the accuracy of given centroids.
 
@@ -97,7 +97,7 @@ def get_final_results(name_method, centroids, x_test, y_test, top_k, clusters_to
     # compute the score for each query and centroid
     print(name_method, end=' ')
     print('- run prediction with centroids...', end=' ')
-    pred = auxiliary.scores_queries_centroids(centroids, x_test, gpu_flag=gpu_flag)
+    pred = auxiliary.scores_queries_centroids(centroids, x_test, gpu_flag=gpu_flag, model = model)
     print('end, shape: ', pred.shape)
 
     # save scores computed
