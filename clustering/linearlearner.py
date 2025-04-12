@@ -11,6 +11,7 @@ from torch import nn
 from torch.utils.data import TensorDataset, DataLoader
 from absl import flags
 import torch.nn.functional as F
+import matplotlib.pyplot as plt
 
 FLAGS = flags.FLAGS
 
@@ -170,9 +171,12 @@ def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
                 c_norm = centroids.pow(2).sum(dim=1).unsqueeze(0)
                 dot = query_proj @ centroids.T
                 dists = q_norm + c_norm - 2 * dot
+                ranks = []
                 for i in range(xb.size(0)):
                     rank = torch.argsort(dists[i]).tolist().index(yb[i].item())
-                    print(f"[DEBUG] Query {i}: true cluster rank = {rank}")
+                    ranks.append(rank)
+                    if len(ranks) <= 10:
+                        print(f"[DEBUG] Query {i}: true cluster rank = {rank}")
 
                 temperature = 0.1
                 logits = -dists / temperature
@@ -191,6 +195,16 @@ def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
             best_model_state = model.state_dict()
 
     model.load_state_dict(best_model_state)
+
+    plt.figure(figsize=(8, 5))
+    plt.hist(ranks, bins=50, range=(0, 500))
+    plt.title("Histogram of True Cluster Ranks")
+    plt.xlabel("True Cluster Rank")
+    plt.ylabel("Frequency")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig("cluster_rank_histogram.png")  # Save to current directory
+    print("[INFO] Saved cluster rank histogram to cluster_rank_histogram.png")
 
     return model
 
