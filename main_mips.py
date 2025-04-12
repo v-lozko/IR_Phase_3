@@ -279,12 +279,17 @@ def main(_):
 
     # training linear-learner
     print('Linear Learner.')
-    new_centroids = linearlearner.run_linear_learner(x_train=x_train, y_train=y_train,
-                                                     x_val=x_val, y_val=y_val,
-                                                     train_queries=queries,
-                                                     n_clusters=FLAGS.nclusters,
-                                                     n_epochs=FLAGS.learner_nepochs,
-                                                     n_units=FLAGS.learner_nunits)
+    if FLAGS.distance_metric == 'euclidean':
+        new_centroids = linearlearner.run_euclidean_learner(
+            x_train, y_train, x_val, y_val, centroids,
+            n_clusters=FLAGS.nclusters, n_epochs=FLAGS.learner_nepochs)
+    else:
+        new_centroids = linearlearner.run_linear_learner(x_train=x_train, y_train=y_train,
+                                                         x_val=x_val, y_val=y_val,
+                                                        train_queries=queries,
+                                                        n_clusters=FLAGS.nclusters,
+                                                        n_epochs=FLAGS.learner_nepochs,
+                                                        n_units=FLAGS.learner_nunits)
 
     print(f'Obtained centroids with shape: {new_centroids.shape}')
 
