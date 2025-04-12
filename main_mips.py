@@ -253,11 +253,12 @@ def main(_):
         print("Max valid cluster index:", np.max(label_clustering))
         new_centroids = linearlearner.run_euclidean_learner(
             x_train, y_train, x_val, y_val, centroids,
-            n_clusters=FLAGS.nclusters, n_epochs=FLAGS.learner_nepochs)
+            n_epochs=FLAGS.learner_nepochs)
     else:
         new_centroids = linearlearner.run_linear_learner(x_train=x_train, y_train=y_train,
                                                          x_val=x_val, y_val=y_val,
                                                         train_queries=queries,
+                                                        n_clusters=FLAGS.nclusters,
                                                         n_epochs=FLAGS.learner_nepochs,
                                                         n_units=FLAGS.learner_nunits)
 
