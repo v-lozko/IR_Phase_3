@@ -118,6 +118,8 @@ def get_final_results(name_method, centroids, x_test, y_test, top_k, clusters_to
         for threshold in tqdm(FLAGS.ells):
             k = int(threshold)
             one_pred = auxiliary.computation_top_k_clusters(k, FLAGS.nclusters, pred)
+            print("First 5 predicted clusters (top_k):", np.where(one_pred[0] == 1)[0])
+            print("True cluster for that query:", np.where(y_test[0] == 1)[0])
             res = auxiliary.evaluate_ell_top_one(one_pred, y_test)
             results_ells.append(res)
             print('k = {0}: {1}'.format(k, res))
@@ -244,7 +246,10 @@ def main(_):
                                                         n_units=FLAGS.learner_nunits)
 
     print(f'Obtained centroids with shape: {new_centroids.shape}')
-
+    if FLAGS.top_k == 1:
+        y_test = auxiliary.query_true_label(
+            FLAGS.nclusters, label_clustering, partitioning[5][:, 0], one_hot=True
+        )
     # results: baseline
     get_final_results('baseline', centroids, x_test, y_test, FLAGS.top_k, clusters_top_k_test, gpu_flag=True)
 
