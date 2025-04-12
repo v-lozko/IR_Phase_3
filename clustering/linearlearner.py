@@ -9,6 +9,8 @@ from tensorflow.keras.optimizers import Adam
 import torch
 from torch import nn
 from torch.utils.data import TensorDataset, DataLoader
+from absl import flags
+
 FLAGS = flags.FLAGS
 
 def nn_linear(k, input_shape, n_units):
