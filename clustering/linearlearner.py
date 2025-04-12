@@ -175,8 +175,6 @@ def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
                 for i in range(xb.size(0)):
                     rank = torch.argsort(dists[i]).tolist().index(yb[i].item())
                     ranks.append(rank)
-                    if len(ranks) <= 10:
-                        print(f"[DEBUG] Query {i}: true cluster rank = {rank}")
 
                 temperature = 0.1
                 logits = -dists / temperature
