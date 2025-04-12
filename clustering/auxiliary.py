@@ -9,6 +9,8 @@ from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 import torch
 from absl import flags
+import torch.nn.functional as F
+
 FLAGS = flags.FLAGS
 
 
