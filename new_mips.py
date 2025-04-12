@@ -1,43 +1,5 @@
 """
-    **A Learning-to-Rank Formulation of Clustering-Based Approximate Nearest Neighbor Search**
-
-    *project*:
-     mips-learnt-ivf
-
-    *authors*:
-     Thomas Vecchiato, Claudio Lucchese, Franco Maria Nardini, Sebastian Bruch
-
-    *name file*:
-     main_mips.py
-
-    *version file*:
-     1.0
-
-    *description*:
-     A critical piece of the modern information retrieval puzzle is approximate nearest neighbor search.
-     Its objective is to return a set of k data points that are closest to a query point, with its accuracy measured by
-     the proportion of exact nearest neighbors captured in the returned set. One popular approach to this question
-     is clustering: The indexing algorithm partitions data points into non-overlapping subsets and represents each
-     partition by a point such as its centroid. The query processing algorithm first identifies the nearest
-     clusters — a process known as routing — then performs a nearest neighbor search over those clusters only.
-     In this work, we make a simple observation: The routing function solves a ranking problem.
-     Its quality can therefore be assessed with a ranking metric, making the function amenable to learning-to-rank.
-     Interestingly, ground-truth is often freely available: Given a query distribution in a top-k configuration,
-     the ground-truth is the set of clusters that contain the exact top-k vectors. We develop this insight and apply
-     it to Maximum Inner Product Search (MIPS). As we demonstrate empirically on various datasets,
-     learning a simple linear function consistently improves the accuracy of clustering-based MIPS.
-
-    *run commands*:
-
-     1. **hdf5 format**:
-     python main_mips.py --name_dataset ... --name_embedding ... --format_file hdf5 --dataset ... --algorithm ...
-     --nclusters ... --top_k ... --test_split_percent ... --split_seed ... --ells ... --learner_nunits ...
-     --learner_nepochs ... --compute_clusters ...
-
-     2. **npy format**:
-     python main_mips.py --name_dataset ... --name_embedding ... --format_file npy --dataset_docs ...
-     --dataset_queries ... --dataset_neighbors ... --algorithm ... --nclusters ... --top_k ... --test_split_percent ...
-     --split_seed ... --ells ... --learner_nunits ... --learner_nepochs ... --compute_clusters ...
+Tried implementing query aware training
 
 """
 

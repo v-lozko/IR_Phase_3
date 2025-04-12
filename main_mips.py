@@ -63,7 +63,7 @@ flags.DEFINE_enum('algorithm', AlgorithmKMeans,
 flags.DEFINE_integer('nclusters', 1000, 'When `algorithm` is KMeans-based: Number of clusters.')
 
 #define distance metric
-flags.DEFINE_string('distance_metric', 'dot', ['dot', 'cosine', 'euclidean'], 'Distance metric between queries and centroids')
+flags.DEFINE_enum('distance_metric', 'dot', ['dot', 'cosine', 'euclidean'], 'Distance metric between queries and centroids')
 
 # multi-probing, set the probes
 flags.DEFINE_list('ells', [1],
