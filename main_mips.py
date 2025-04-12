@@ -280,6 +280,8 @@ def main(_):
     # training linear-learner
     print('Linear Learner.')
     if FLAGS.distance_metric == 'euclidean':
+        print("Unique y_train values:", np.unique(y_train))
+        print("Max valid cluster index:", np.max(label_clustering))
         new_centroids = linearlearner.run_euclidean_learner(
             x_train, y_train, x_val, y_val, centroids,
             n_clusters=FLAGS.nclusters, n_epochs=FLAGS.learner_nepochs)

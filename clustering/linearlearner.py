@@ -117,11 +117,21 @@ def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
 
     # Convert input numpy arrays to PyTorch tensors
     x_train = torch.tensor(x_train, dtype=torch.float32).to(device)
-    y_train = torch.tensor(y_train, dtype=torch.long).to(device)
+    if not isinstance(y_train, torch.Tensor):
+        y_train = torch.tensor(y_train, dtype=torch.long, device=device)
+    else:
+        y_train = y_train.to(dtype=torch.long, device=device)
     x_val = torch.tensor(x_val, dtype=torch.float32).to(device)
-    y_val = torch.tensor(y_val, dtype=torch.long).to(device)
+    if not isinstance(y_val, torch.Tensor):
+        y_val = torch.tensor(y_val, dtype=torch.long, device=device)
+    else:
+        y_val = y_val.to(dtype=torch.long, device=device)
 
     centroids = torch.tensor(centroids, dtype=torch.float32).to(device)
+
+    print("y_train dtype:", y_train.dtype, "shape:", y_train.shape)
+    print("centroids shape:", centroids.shape)
+    print("y_train min:", y_train.min().item(), "max:", y_train.max().item())
 
     # Create regression targets from centroid labels
     target_train = centroids[y_train]  # shape: [N, D]
