@@ -146,12 +146,14 @@ def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
         model.train()
         for xb, yb in train_loader:
             optimizer.zero_grad()
-            query_proj = model(xb)  # shape: [B, 384]
+
+            query_proj = F.normalize(model(xb), p=2, dim=1)  # [B, D]
+            centroids_norm = F.normalize(centroids, p=2, dim=1)  # [K, D]
 
             # Compute distances to all centroids
             q_norm = query_proj.pow(2).sum(dim=1, keepdim=True)  # [B, 1]
-            c_norm = centroids.pow(2).sum(dim=1).unsqueeze(0)    # [1, K]
-            dot = query_proj @ centroids.T                       # [B, K]
+            c_norm = centroids_norm.pow(2).sum(dim=1).unsqueeze(0)    # [1, K]
+            dot = query_proj @ centroids_norm.T                       # [B, K]
             dists = q_norm + c_norm - 2 * dot                    # [B, K]
 
             logits = -dists  # negative distances → similarity
@@ -164,19 +166,22 @@ def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
         val_loss = 0
         correct = 0
         total = 0
+        ranks = []
         with torch.no_grad():
             for xb, yb in val_loader:
-                query_proj = model(xb)
+                query_proj = F.normalize(model(xb), p=2, dim=1)  # [B, D]
+                centroids_norm = F.normalize(centroids, p=2, dim=1)  # [K, D]
+
                 q_norm = query_proj.pow(2).sum(dim=1, keepdim=True)
-                c_norm = centroids.pow(2).sum(dim=1).unsqueeze(0)
-                dot = query_proj @ centroids.T
+                c_norm = centroids_norm.pow(2).sum(dim=1).unsqueeze(0)
+                dot = query_proj @ centroids_norm.T
                 dists = q_norm + c_norm - 2 * dot
-                ranks = []
+
                 for i in range(xb.size(0)):
                     rank = torch.argsort(dists[i]).tolist().index(yb[i].item())
                     ranks.append(rank)
 
-                temperature = 0.1
+                temperature = 0.75
                 logits = -dists / temperature
                 val_loss += F.cross_entropy(logits, yb).item()
 
@@ -203,6 +208,13 @@ def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
     plt.tight_layout()
     plt.savefig("cluster_rank_histogram.png")  # Save to current directory
     print("[INFO] Saved cluster rank histogram to cluster_rank_histogram.png")
+
+    ranks_np = np.array(ranks)
+    print(f"[STATS] Top-1 accuracy: {(ranks_np <= 0).mean():.4f}")
+    print(f"[STATS] Top-5 accuracy: {(ranks_np < 5).mean():.4f}")
+    print(f"[STATS] Top-10 accuracy: {(ranks_np < 10).mean():.4f}")
+    print(f"[STATS] Top-30 accuracy: {(ranks_np < 30).mean():.4f}")
+    print(f"[STATS] Top-100 accuracy: {(ranks_np < 100).mean():.4f}")
 
     return model
 
