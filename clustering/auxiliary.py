@@ -14,11 +14,20 @@ import torch.nn.functional as F
 FLAGS = flags.FLAGS
 
 
-def scores_queries_centroids(centroids, x_test, gpu_flag=True):
+def scores_queries_centroids(centroids, x_test, gpu_flag=True, model = None):
     """
     Compute for each query the distance/similarity to centroids, depending on the selected metric.
     """
     distance_metric = FLAGS.distance_metric
+
+    if model is not None:
+        model.eval()
+        with torch.no_grad():
+            x_tensor = torch.tensor(x_test, dtype=torch.float32)
+            if gpu_flag:
+                x_tensor = x_tensor.cuda()
+            x_proj = model(x_tensor).cpu()
+            x_test = x_proj.numpy()
 
     if gpu_flag:
         torch.cuda.set_device(0)
