@@ -248,7 +248,7 @@ def main(_):
     print(f'Obtained centroids with shape: {new_centroids.shape}')
     if FLAGS.top_k == 1:
         y_test = auxiliary.query_true_label(
-            FLAGS.nclusters, label_clustering, partitioning[5][:, 0], one_hot=True
+            FLAGS.nclusters, label_clustering, partitioning[5], one_hot=True
         )
     # results: baseline
     get_final_results('baseline', centroids, x_test, y_test, FLAGS.top_k, clusters_top_k_test, gpu_flag=True)
