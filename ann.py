@@ -47,7 +47,7 @@ if __name__ == "__main__":
         "test_split_percent": 20,
         "split_seed": 42,
         "learner_nunits": 0,
-        "learner_nepochs": 100,
+        "learner_nepochs": 10,
         "compute_clusters": 0  # Compute clusters (set to 0 to reuse clusters)
     }
 
@@ -66,7 +66,7 @@ if __name__ == "__main__":
         "test_split_percent": 20,
         "split_seed": 42,
         "learner_nunits": 0,
-        "learner_nepochs": 100,
+        "learner_nepochs": 10,
         "compute_clusters": 0  # Compute clusters (set to 0 to reuse clusters)
     }
 
