@@ -26,12 +26,7 @@ def nn_linear(k, input_shape, n_units):
      if it is set to 0, the hidden layer is removed, having only the input and output layer.
     :return: The neural network model.
     """
-    # w/out hidden layer
-    # if FLAGS.distance_metric == 'euclidean':
-    #     model = models.Sequential()
-    #     model.add(layers.Dense(128, activation='relu', use_bias=True, input_shape=input_shape))
-    #     model.add(layers.Dense(k, activation='softmax', use_bias=True))
-    # else:
+
     if n_units == 0:
         model = models.Sequential()
         model.add(layers.Dense(k, activation='softmax', use_bias=False, input_shape=input_shape))
@@ -43,7 +38,6 @@ def nn_linear(k, input_shape, n_units):
         model.add(layers.Dense(k, activation='softmax', use_bias=False))
 
     return model
-
 
 def run_nn(n_clusters, input_shape, x_train, y_train, x_val, y_val, n_epochs=50, n_units=0):
     """
@@ -120,7 +114,7 @@ def run_linear_learner(x_train, y_train, x_val, y_val, train_queries, n_clusters
 
 
 def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
-                                  n_epochs, lr=1e-3, batch_size=256):
+                          n_epochs, lr=1e-3, batch_size=256, hidden_dim=128):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Prepare tensors
@@ -134,7 +128,17 @@ def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
     val_loader = DataLoader(TensorDataset(x_val, y_val), batch_size=batch_size)
 
     # Learner model: project queries into same space as centroids
-    model = nn.Linear(x_train.shape[1], centroids.shape[1], bias=False).to(device)
+    class EuclideanProjectionMLP(nn.Module):
+        def __init__(self, input_dim=384, hidden_dim=256, output_dim=384):
+            super().__init__()
+            self.hidden = nn.Linear(input_dim, hidden_dim)
+            self.output = nn.Linear(hidden_dim, output_dim)
+
+        def forward(self, x):
+            x = F.relu(self.hidden(x))
+            return x
+
+    model = EuclideanProjectionMLP(x_train.shape[1], hidden_dim, centroids.shape[1]).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
     best_model_state = None
