@@ -90,6 +90,6 @@ if __name__ == "__main__":
     }
 
     # Run the ANN search
-    #run_ann_search(**params_dot)
-    #run_ann_search(**params_cosine)
-    run_ann_search(**params_euc)
+    run_ann_search(**params_dot)
+    run_ann_search(**params_cosine)
+    #run_ann_search(**params_euc)
