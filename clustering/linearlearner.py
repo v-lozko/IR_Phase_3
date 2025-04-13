@@ -136,7 +136,7 @@ def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
 
         def forward(self, x):
             x = F.relu(self.hidden(x))
-            return x
+            return self.output(x)
 
     model = EuclideanProjectionMLP(x_train.shape[1], hidden_dim, centroids.shape[1]).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
@@ -207,7 +207,7 @@ def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
     plt.ylabel("Frequency")
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig("cluster_rank_histogram.png")  # Save to current directory
+    plt.savefig("cluster_rank_histogram.png")
     print("[INFO] Saved cluster rank histogram to cluster_rank_histogram.png")
 
     ranks_np = np.array(ranks)
@@ -218,4 +218,5 @@ def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
     print(f"[STATS] Top-100 accuracy: {(ranks_np < 100).mean():.4f}")
 
     return model
+
 
