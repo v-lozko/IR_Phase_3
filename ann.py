@@ -48,7 +48,7 @@ if __name__ == "__main__":
         "split_seed": 42,
         "learner_nunits": 0,
         "learner_nepochs": 100,
-        "compute_clusters": 1  # Compute clusters (set to 0 to reuse clusters)
+        "compute_clusters": 0  # Compute clusters (set to 0 to reuse clusters)
     }
 
     params_cosine = {
