@@ -108,12 +108,7 @@ def get_final_results(name_method, centroids, x_test, y_test, top_k, clusters_to
     # computation of the final scores
     results_ells = []
     if top_k > 1:
-        for threshold in tqdm(FLAGS.ells):
-            k = int(threshold)
-            one_pred = auxiliary.computation_top_k_clusters(k, FLAGS.nclusters, pred)
-            res = auxiliary.evaluate_ell_top_k(one_pred, clusters_top_k_test, top_k)
-            results_ells.append(res)
-            print('k = {0}: {1}'.format(k, res))
+        raise NotImplementedError("top k > 1 is not supported in this version.")
     else:
         for threshold in tqdm(FLAGS.ells):
             k = int(threshold)
@@ -263,6 +258,11 @@ def main(_):
                                                         n_units=FLAGS.learner_nunits)
 
         print(f'Obtained centroids with shape: {new_centroids.shape}')
+
+    if FLAGS.distance_metric == 'euclidean':
+        y_test = auxiliary.query_true_label(
+            FLAGS.nclusters, label_clustering, partitioning[5], one_hot=True
+        )
 
     # results: baseline
     if FLAGS.distance_metric in ['dot', 'cosine']:
