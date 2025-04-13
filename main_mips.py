@@ -263,16 +263,6 @@ def main(_):
                                                         n_units=FLAGS.learner_nunits)
 
         print(f'Obtained centroids with shape: {new_centroids.shape}')
-    if FLAGS.top_k == 1:
-        if partitioning[5].ndim > 1:
-            partitioning[5] = partitioning[5][:, 0]
-
-        y_test = auxiliary.query_true_label(
-            FLAGS.nclusters,
-            label_clustering,
-            partitioning[5],
-            one_hot=(FLAGS.distance_metric in ['dot', 'cosine'])
-        )
 
     # results: baseline
     if FLAGS.distance_metric in ['dot', 'cosine']:
