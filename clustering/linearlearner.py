@@ -122,7 +122,7 @@ def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
     y_train = torch.tensor(y_train, dtype=torch.long, device=device)
     x_val = torch.tensor(x_val, dtype=torch.float32).to(device)
     y_val = torch.tensor(y_val, dtype=torch.long, device=device)
-    centroids = torch.tensor(centroids, dtype=torch.float32).to(device)
+    centroids_tensor = torch.tensor(centroids, dtype=torch.float32).to(device)
 
     train_loader = DataLoader(TensorDataset(x_train, y_train), batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(TensorDataset(x_val, y_val), batch_size=batch_size)
@@ -138,7 +138,7 @@ def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
             x = F.relu(self.hidden(x))
             return self.output(x)
 
-    model = EuclideanProjectionMLP(x_train.shape[1], hidden_dim, centroids.shape[1]).to(device)
+    model = EuclideanProjectionMLP(x_train.shape[1], hidden_dim, centroids_tensor.shape[1]).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
     best_model_state = None
@@ -150,15 +150,15 @@ def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
             optimizer.zero_grad()
 
             query_proj = F.normalize(model(xb), p=2, dim=1)  # [B, D]
-            centroids_norm = F.normalize(centroids, p=2, dim=1)  # [K, D]
+            centroid_proj = F.normalize(model(centroids_tensor), p=2, dim=1)  # [K, D]
 
-            # Compute distances to all centroids
-            q_norm = query_proj.pow(2).sum(dim=1, keepdim=True)  # [B, 1]
-            c_norm = centroids_norm.pow(2).sum(dim=1).unsqueeze(0)    # [1, K]
-            dot = query_proj @ centroids_norm.T                       # [B, K]
-            dists = q_norm + c_norm - 2 * dot                    # [B, K]
+            # Compute distances
+            q_norm = query_proj.pow(2).sum(dim=1, keepdim=True)         # [B, 1]
+            c_norm = centroid_proj.pow(2).sum(dim=1).unsqueeze(0)       # [1, K]
+            dot = query_proj @ centroid_proj.T                          # [B, K]
+            dists = q_norm + c_norm - 2 * dot
 
-            logits = -dists  # negative distances → similarity
+            logits = -dists
             loss = F.cross_entropy(logits, yb)
             loss.backward()
             optimizer.step()
@@ -171,17 +171,13 @@ def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
         ranks = []
         with torch.no_grad():
             for xb, yb in val_loader:
-                query_proj = F.normalize(model(xb), p=2, dim=1)  # [B, D]
-                centroids_norm = F.normalize(centroids, p=2, dim=1)  # [K, D]
+                query_proj = F.normalize(model(xb), p=2, dim=1)
+                centroid_proj = F.normalize(model(centroids_tensor), p=2, dim=1)
 
                 q_norm = query_proj.pow(2).sum(dim=1, keepdim=True)
-                c_norm = centroids_norm.pow(2).sum(dim=1).unsqueeze(0)
-                dot = query_proj @ centroids_norm.T
+                c_norm = centroid_proj.pow(2).sum(dim=1).unsqueeze(0)
+                dot = query_proj @ centroid_proj.T
                 dists = q_norm + c_norm - 2 * dot
-
-                for i in range(xb.size(0)):
-                    rank = torch.argsort(dists[i]).tolist().index(yb[i].item())
-                    ranks.append(rank)
 
                 logits = -dists
                 val_loss += F.cross_entropy(logits, yb).item()
@@ -189,6 +185,10 @@ def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
                 preds = logits.argmax(dim=1)
                 correct += (preds == yb).sum().item()
                 total += yb.size(0)
+
+                for i in range(xb.size(0)):
+                    rank = torch.argsort(dists[i]).tolist().index(yb[i].item())
+                    ranks.append(rank)
 
         val_loss /= len(val_loader)
         acc = correct / total
@@ -200,6 +200,7 @@ def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
 
     model.load_state_dict(best_model_state)
 
+    # Plot rank histogram
     plt.figure(figsize=(8, 5))
     plt.hist(ranks, bins=50, range=(0, 500))
     plt.title("Histogram of True Cluster Ranks")
@@ -217,6 +218,9 @@ def run_euclidean_learner(x_train, y_train, x_val, y_val, centroids,
     print(f"[STATS] Top-30 accuracy: {(ranks_np < 30).mean():.4f}")
     print(f"[STATS] Top-100 accuracy: {(ranks_np < 100).mean():.4f}")
 
-    return model
+    projected_centroids = model(centroids_tensor).detach().cpu().numpy()
+
+    return model, projected_centroids
+
 
 

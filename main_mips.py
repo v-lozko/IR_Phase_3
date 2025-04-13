@@ -246,7 +246,7 @@ def main(_):
     if FLAGS.distance_metric == 'euclidean':
         print("Unique y_train values:", np.unique(y_train))
         print("Max valid cluster index:", np.max(label_clustering))
-        learner_model = linearlearner.run_euclidean_learner(
+        learner_model, new_centroids = linearlearner.run_euclidean_learner(
             x_train, y_train, x_val, y_val, centroids,
             n_epochs=FLAGS.learner_nepochs)
     else:
@@ -257,7 +257,7 @@ def main(_):
                                                         n_epochs=FLAGS.learner_nepochs,
                                                         n_units=FLAGS.learner_nunits)
 
-        print(f'Obtained centroids with shape: {new_centroids.shape}')
+    print(f'Obtained centroids with shape: {new_centroids.shape}')
 
     if FLAGS.distance_metric == 'euclidean':
         y_test = auxiliary.query_true_label(
@@ -276,7 +276,7 @@ def main(_):
         get_final_results('baseline', centroids, x_test, y_test, FLAGS.top_k, clusters_top_k_test, gpu_flag=True)
 
         # results: linear-learner
-        get_final_results('linearlearner', centroids, x_test, y_test, FLAGS.top_k, clusters_top_k_test,
+        get_final_results('linearlearner', new_centroids, x_test, y_test, FLAGS.top_k, clusters_top_k_test,
                           gpu_flag=True, model = learner_model)
 
     end = time.time()
