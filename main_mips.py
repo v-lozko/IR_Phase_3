@@ -270,13 +270,13 @@ def main(_):
         get_final_results('baseline', centroids, x_test, y_test, FLAGS.top_k, clusters_top_k_test, gpu_flag=True)
 
         # results: linear-learner
-        get_final_results('linearlearner', new_centroids, x_test, y_test, FLAGS.top_k, clusters_top_k_test, gpu_flag=True)
+        get_final_results('linearlearner', centroids, x_test, y_test, FLAGS.top_k, clusters_top_k_test, gpu_flag=True)
     else:
         # results: baseline
         get_final_results('baseline', centroids, x_test, y_test, FLAGS.top_k, clusters_top_k_test, gpu_flag=True)
 
         # results: linear-learner
-        get_final_results('linearlearner', new_centroids, x_test, y_test, FLAGS.top_k, clusters_top_k_test,
+        get_final_results('linearlearner', centroids, x_test, y_test, FLAGS.top_k, clusters_top_k_test,
                           gpu_flag=True, model = learner_model)
 
     end = time.time()
